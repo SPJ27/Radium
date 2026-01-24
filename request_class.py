@@ -7,7 +7,16 @@ class Request:
         self.path = environ.get("PATH_INFO", "/")
         self.method = environ.get("REQUEST_METHOD", "GET")
         self.query = self._parse_query(environ.get("QUERY_STRING", ""))
-
+        temp_body = environ.get("wsgi.input").read(int(environ.get("CONTENT_LENGTH", 0) or 0)).decode() if environ.get("CONTENT_LENGTH") else ""
+        self.body = temp_body.split("&") if temp_body else []
+        body_dict = {}
+        if self.method == "POST":
+            for pair in self.body:
+                if "=" in pair:
+                    key, value = pair.split("=", 1)
+                    body_dict[key] = value
+        
+        self.body = body_dict
         self.headers = self._parse_headers(environ)
         
         self.route, self.params = self._find_matching_route(

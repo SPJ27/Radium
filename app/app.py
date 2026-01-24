@@ -1,22 +1,55 @@
-from outputs import HTMLFileResponse, redirectResponse, HTMLResponse, JSONResponse
 from response import Response
-listOfItems = ['12']
+from Radium import AccountSystem
+from Radium import Outputs
+import json
 
-def homepage(res):
-    global listOfItems
-    item = res.params.get('item')
-    return HTMLFileResponse('/static/home.html', layout='/static/_layout.html', params={'item': item}, layout_params={'title': 'Home Page'})
+account = AccountSystem()
 
-def addItem(res):
-    global listOfItems
-    item = res.headers.get('item')
-    # print(res.headers)
-    listOfItems.append(item)
-    return redirectResponse("/")
+def home(req):
+    user = account.get_session(req)
+    user_data = json.loads(user.body)
+    print('user in home:', user_data)
+    if user:
+        return Outputs.HTMLResponse(f"<h1>Welcome {user_data['email']}</h1><a href='/logout'>Logout</a>")
 
-def signUp(req):
-    return JSONResponse({'status': '200 OK', 'creation': 'successful'}, cookies={'email': 'saksham.khatod27@gmail.com', 'password': 'hello.123'})
+    return Outputs.HTMLResponse("""
+        <h1>Home</h1>
+        <a href="/signup">Signup</a><br>
+        <a href="/login">Login</a>
+    """)
 
-def getLogin(req):
-    print('cookies: ', req.cookies)
-    return JSONResponse({'1': 2})
+def signup(req):
+    if req.method == "POST":
+        print(req.body)
+        email = req.body.get("email")
+        password = req.body.get("password")
+        account.create_account(email=email, password=password)
+        return Outputs.TextResponse("Signup successful")
+
+    return Outputs.HTMLResponse("""
+        <form method="POST">
+            Email: <input name="email"><br>
+            Password: <input name="password" type="password"><br>
+            <button>Signup</button>
+        </form>
+    """)
+
+
+def login(req):
+    if req.method == "POST":
+        email = req.body.get("email")
+        password = req.body.get("password")
+        sid = account.login(email, password)
+        print('body', (sid.body))
+        if json.loads(sid.body)['message'] != "verified":
+            return Outputs.TextResponse("Invalid credentials")
+        return sid
+
+    return Outputs.HTMLResponse("""
+        <form method="POST">
+            Email: <input name="email"><br>
+            Password: <input name="password" type="password"><br>
+            <button>Login</button>
+        </form>
+    """)
+

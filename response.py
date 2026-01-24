@@ -13,4 +13,5 @@ class Response:
         if http_only:
             cookie += "; HttpOnly"
         self.cookies[key] = cookie
+        print('set_cookie called:', cookie)
         self.headers.append(("Set-Cookie", cookie))
