@@ -6,3 +6,4 @@
 4. Layout support
 5. Cookies Management
 6. Added Radium Email Auth
+7. File based routing

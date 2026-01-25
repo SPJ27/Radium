@@ -41,7 +41,6 @@ class Request:
                 name = key[5:].replace("_", "-").title()
                 headers[name] = value
 
-        # Content-Type & Content-Length are special (not HTTP_)
         if "CONTENT_TYPE" in environ:
             headers["Content-Type"] = environ["CONTENT_TYPE"]
 
@@ -55,7 +54,6 @@ class Request:
 
         parsed = parse_qs(query_string, keep_blank_values=True)
 
-        # Convert {"a": ["1"]} → {"a": "1"}
         clean = {}
         for key, value in parsed.items():
             if key == "":

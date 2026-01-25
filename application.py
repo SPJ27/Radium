@@ -1,23 +1,19 @@
+import mimetypes
+import os
 from wsgiref.simple_server import make_server
-from app.paths import paths
+from paths import routes
 import re
-from request_class import Request
+from Radium.request_class import Request
 
 def normalize_response(response):
-    # Format: [body, content_type]
     if len(response) == 2:
         body, content_type = response
         return body, "200 OK", [("Content-Type", content_type)]
-
-    # Format: [body, content_type, status, headers]
     if len(response) == 4:
         body, content_type, status, headers = response
-
         if content_type:
             headers.append(("Content-Type", content_type))
-
         return body, status, headers
-
     raise ValueError("Invalid response format")
 
 
@@ -35,8 +31,23 @@ def find_matching_route(routes, user_path):
 
 
 def app(environ, start_response):
-    request = Request(paths, environ)
+    print(routes)
+    path = environ.get("PATH_INFO", "")
+    if path.startswith("/static/"):
+        file_path = path.lstrip("/")  # static/logo.png
 
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            content_type, _ = mimetypes.guess_type(file_path)
+            content_type = content_type or "application/octet-stream"
+
+            with open(file_path, "rb") as f:
+                start_response("200 OK", [("Content-Type", content_type)])
+                return [f.read()]
+
+        start_response("404 Not Found", [])
+        return [b"Static file not found"]
+    
+    request = Request(routes, environ)
     if request.route is None:
         try:
             with open("static/&error.html", "r") as f:
@@ -46,8 +57,7 @@ def app(environ, start_response):
         except FileNotFoundError:
             start_response("404 Not Found", [])
             return [b"Path Not Found"]
-    
-    function = paths[request.route]
+    function = routes[request.route]
     response = function(request)
     start_response(response.status, response.headers)
     return [response.body.encode()]
