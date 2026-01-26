@@ -29,4 +29,7 @@ def run():
 
 
 if __name__ == "__main__":
+    print("Starting server with auto-reload...")
+    print("Server is running at http://127.0.0.1:8000")
+    print("Press Ctrl+C to stop.")
     run()

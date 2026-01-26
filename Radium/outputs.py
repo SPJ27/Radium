@@ -1,50 +1,90 @@
 from Radium.response import Response
+import json
 
 class Outputs:
-    def TextResponse(response):
-        return Response(response, content_type="text/plain")
 
-    def HTMLResponse(response):
-        return Response(response, content_type="text/html") 
+    @staticmethod
+    def _apply_cookies(res, cookies):
+        if cookies:
+            for key, value in cookies.items():
+                res.set_cookie(key=key, value=str(value))
+        return res
 
-    def HTMLFileResponse(file_path, layout=None, params=None, layout_params=None):
+    @staticmethod
+    def TextResponse(response, cookies=None, status="200 OK"):
+        res = Response(
+            response,
+            status=status,
+            content_type="text/plain"
+        )
+        return Outputs._apply_cookies(res, cookies)
+
+    @staticmethod
+    def HTMLResponse(response, cookies=None, status="200 OK"):
+        res = Response(
+            response,
+            status=status,
+            content_type="text/html"
+        )
+        return Outputs._apply_cookies(res, cookies)
+
+    @staticmethod
+    def HTMLFileResponse(
+        file_path,
+        layout=None,
+        params=None,
+        layout_params=None,
+        cookies=None,
+        status="200 OK"
+    ):
         try:
-            with open(f'./app/{file_path}', "r") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
+
             if params:
                 for key, value in params.items():
-                    content = content.replace(f"{{{{{key}}}}}", value)
-            print("params:", params)
-            print("content:", content)
+                    content = content.replace(f"{{{{{key}}}}}", str(value))
 
             if layout:
-                with open(f'./app/{layout}', "r") as f:
+                with open(layout, "r", encoding="utf-8") as f:
                     layout_content = f.read()
 
                 if layout_params:
                     for key, value in layout_params.items():
-                        layout_content = layout_content.replace(f"{{{{{key}}}}}", value)
+                        layout_content = layout_content.replace(
+                            f"{{{{{key}}}}}", str(value)
+                        )
 
-                layout_content = layout_content.replace("{{children}}", content)
-            else:
-                layout_content = content
-            return Response(layout_content, content_type="text/html")
+                content = layout_content.replace("{{children}}", content)
+
+            res = Response(
+                content,
+                status=status,
+                content_type="text/html"
+            )
+            return Outputs._apply_cookies(res, cookies)
+
         except FileNotFoundError:
-            return Response(f"<h1>File {file_path} not found.</h1>", content_type="text/html")
-        
-    def JSONResponse(response_dict, cookies=None):
-        import json
-        res = Response(json.dumps(response_dict), content_type="application/json")
-        if cookies:
-            for key in cookies.keys():
-                print('setting cookie', key, cookies[key])
-                value = cookies[key]
-                value = str(value)
+            return Response(
+                f"<h1>File {file_path} not found.</h1>",
+                status="404 Not Found",
+                content_type="text/html"
+            )
 
-                res.set_cookie(key=key, value=value)
-        return res
+    @staticmethod
+    def JSONResponse(response_dict, cookies=None, status="200 OK"):
+        res = Response(
+            json.dumps(response_dict),
+            status=status,
+            content_type="application/json"
+        )
+        return Outputs._apply_cookies(res, cookies)
 
-    def redirectResponse(location, status="302 Found"):
-        return Response("", status=status, headers=[("Location", location)])
-
-
+    @staticmethod
+    def RedirectResponse(location, cookies=None, status="302 Found"):
+        res = Response(
+            "",
+            status=status,
+            headers=[("Location", location)]
+        )
+        return Outputs._apply_cookies(res, cookies)

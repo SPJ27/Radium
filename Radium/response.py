@@ -3,7 +3,6 @@ class Response:
         self.body = body
         self.status = status
         self.headers = headers if headers is not None else [("Content-Type", content_type)]
-        print(self.headers)
         self.content_type = content_type
         self.cookies = {}
     def set_cookie(self, key, value, path="/", max_age=None, http_only=True):

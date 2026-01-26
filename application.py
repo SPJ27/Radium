@@ -4,6 +4,7 @@ from wsgiref.simple_server import make_server
 from paths import routes
 import re
 from Radium.request_class import Request
+from middlewares.middleware import middleware
 
 def normalize_response(response):
     if len(response) == 2:
@@ -31,8 +32,11 @@ def find_matching_route(routes, user_path):
 
 
 def app(environ, start_response):
-    print(routes)
     path = environ.get("PATH_INFO", "")
+    if middleware(path, environ) is not None:
+        response = function(request)
+        start_response(response.status, response.headers)
+        return [response.body.encode()]
     if path.startswith("/static/"):
         file_path = path.lstrip("/")  # static/logo.png
 
