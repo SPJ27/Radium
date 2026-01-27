@@ -6,6 +6,8 @@ import re
 from Radium.request_class import Request
 from middlewares.middleware import middleware
 
+
+
 def normalize_response(response):
     if len(response) == 2:
         body, content_type = response
