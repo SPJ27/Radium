@@ -1,7 +1,14 @@
 # **Radium**
 
-To install:
+**To install:**
+```
 pip install radium-web
+```
+
+**To create a new Radium project, run**
+```
+radium init [project name]
+```
 
 It is a lightweight Python web framework focused on **file-based routing**, **server-side rendering**, and **simple authentication**, designed for rapid development and learning.
 ⚠️ **v0.1 is for development only — not production-ready yet.**
