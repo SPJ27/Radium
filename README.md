@@ -2,7 +2,8 @@
 ---
 
 **⚠ Requires Python 3.7+**
-**home.html is empty by default, you must edit it yourself**
+
+**```home.html``` is empty by default, you must edit it yourself**
 
 [Installation Demo](https://youtu.be/gecKRMHAA0w)
 ---
