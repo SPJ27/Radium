@@ -1,6 +1,6 @@
 # Radium
 
-Radium is a Python web framework built with Next.js routing system, becuase I hate Django (just kidding haha wait that wasn't funny). Instead of adding routes in a separate file, you create folders and write page functions.
+Radium is a Python web framework built with Next.js routing system, becuase I hate Django (just kidding haha wait that wasn't funny). Instead of adding routes in a separate file, you create folders and write page functions. Also this readme wasn't written using GPT as I have been working with markdown since a long time so I know the syntax and all.
 
 ---
 
