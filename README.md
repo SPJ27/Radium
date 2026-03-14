@@ -1,128 +1,180 @@
-# **Radium**
+# Radium
 
-It is a lightweight Python web framework focused on **file-based routing**, **server-side rendering**, and **simple authentication**, designed for rapid development and learning.
-⚠️ **v0.1 is for development only — not production-ready yet.**
-
----
-
-## Features
-
-### 1. Routing & Requests
-
-* **File-Based Routing**
-  Routes are automatically generated from the folder structure.
-  Use `@` to define routes:
-
-  ```
-  @login
-  @login/[id]
-  ```
-* **Params & Query Support**
-  Built-in handling for dynamic route parameters and query strings.
-* **HTTP Method Detection**
-  Automatic detection of `GET`, `POST`, and other HTTP methods.
+Radium is a Python web framework built with Next.js routing system, becuase I hate Django (just kidding haha wait that wasn't funny). Instead of adding routes in a separate file, you create folders and write page functions.
 
 ---
 
-### 2. Request Object (`req`)
+## Installation
 
-The `req` object provides structured access to incoming request data:
+```bash
+pip install radium-web
+```
 
-* `req.path` – Requested URL path
-* `req.method` – HTTP method
-* `req.body` – Parsed request body
-* `req.query` – Query parameters
-* `req.params` – Route parameters
-* `req.headers` – Request headers
-* `req.route` – Matched route
-* `req.cookies` – Parsed cookies
+Then start a new project:
 
----
+```bash
+radium init myapp
+cd myapp
+python run.py
+```
 
-### 3. Response Object (`res`)
-
-The `res` object controls outgoing responses:
-
-* `res.body` – Response body
-* `res.status` – HTTP status code
-* `res.headers` – Response headers
-* `res.cookies` – Cookies to be sent
-* `res.set_cookie(key, value)` – Set a cookie
+Radium has hot reload bydefault, so the server restarts automatically whenever you save a file.
 
 ---
 
-### 4. Rendering & Outputs
+## Routing
 
-* **Radium Templating Engine**
-  Lightweight templating for dynamic HTML rendering.
-* **Layout Support**
-  Reusable layouts with child view injection.
-* **Output Methods**
-
-  * JSON responses
-  * Plain text responses
-  * Raw HTML responses
-  * HTML file responses
-
----
-
-### 5. Authentication & Security
-
-* **Email Authentication**
-  Built-in email-based authentication.
-* **Authentication Sessions**
-  Secure session handling for logged-in users.
-* **Hashed Password Storage**
-  Passwords are securely hashed before being stored.
-* **Auth Utilities**
-  Auth helpers are available via `auth.auth`.
-
----
-
-### 6. Server & Middleware
-
-* **Middleware Support**
-  Global and route-level middleware.
-* **Custom Error Pages**
-  Supports custom error pages such as `&error.html`.
-* **Static File Serving**
-  Serve CSS, JS, images, and other static assets.
-* **Auto Reload**
-  Automatic server reload on file changes during development.
-
----
-
-### 7. Developer Experience
-
-* **CLI Tools**
-  Command-line utilities for project setup and management.
-* **Environment Variable Support (`.env`)**
-  Built-in configuration using environment variables.
-
-> ⚠️ **Supabase-related variables in `.env` MUST NOT be modified.**
-
----
-
-## 📌 Usage Example
+Routes are defined by the folder structure inside your `app/` directory. To create a new route, add a folder named `@pathName` and place a `page.py` file inside it with a function called `page`.
 
 ```python
-import json
+# app/@home/page.py
 from Radium.outputs import Outputs
-from auth.auth import account
-from supabase_utils.setup import SupabaseSetup
 
 def page(req):
-    return Outputs.HTMLFileResponse(
-        'templates/home.html'
-    )
+    return Outputs.HTMLFileResponse('templates/home.html')
+```
+
+The folder name (without the `@`) becomes the URL path. Nested folders produce nested routes.
+
+---
+
+## The Request Object
+
+Every `page` function receives a `req` object that gives you access to everything about the incoming request.
+
+| Attribute | Description |
+|---|---|
+| `req.path` | The requested URL path |
+| `req.method` | HTTP method (GET, POST, etc.) |
+| `req.body` | Parsed request body |
+| `req.query` | Query string parameters |
+| `req.params` | Route parameters |
+| `req.headers` | Request headers |
+| `req.route` | The matched route |
+| `req.cookies` | Parsed cookies |
+
+---
+
+## The Response Object
+
+The `res` object controls what gets sent back to the client. This is generally built automatically by Output Response
+
+| Attribute / Method | Description |
+|---|---|
+| `res.body` | Response body |
+| `res.status` | HTTP status code |
+| `res.headers` | Response headers |
+| `res.cookies` | Cookies to send |
+| `res.set_cookie(key, value)` | Set a cookie |
+
+---
+
+## Outputs
+
+`Outputs` is the standard way to return a response from a `page` function. There are four types.
+
+**HTML file** — renders a file from disk:
+```python
+return Outputs.HTMLFileResponse('./templates/home.html')
+```
+
+**Inline HTML** — renders a string directly:
+```python
+return Outputs.HTMLResponse('<h1>Hello</h1>')
+```
+
+**Plain text:**
+```python
+return Outputs.TextResponse('Hello')
+```
+
+**JSON:**
+```python
+return Outputs.JSONResponse({'key': 'value'})
 ```
 
 ---
 
-## ⚠️ Important Notes
+## Layouts and Templating
 
-* **File structure MUST NOT be changed**
-* **v0.1 does not support production use**
-* Routes must be created using the `@` prefix
-* Auth functions should be accessed only from `auth.auth`
-* Supabase environment variables must remain unchanged
+You can wrap a page in a shared layout by passing a `layout` argument. The layout file is a plain HTML file with a `{{children}}` placeholder where the page content will be put in.
+
+```python
+return Outputs.HTMLFileResponse(
+    './templates/home.html',
+    layout='./templates/_layout.html'
+)
+```
+
+```html
+<!-- templates/_layout.html -->
+<html>
+<head>
+  <title>My App</title>
+</head>
+<body>
+  <nav>My Nav</nav>
+  {{children}}
+</body>
+</html>
+```
+
+You can pass dynamic data to both the page and the layout using the `params` and `layoutParams` arguments:
+
+```python
+return Outputs.HTMLFileResponse(
+    path='./templates/home.html',
+    layout='./templates/_layout.html',
+    params={'title': 'Welcome'},
+    layoutParams={'user': 'Alice'}
+)
+```
+
+```html
+<h1>{{title}}</h1>
+```
+
+---
+
+## Authentication
+
+Each route folder has access to an `account` object imported from `auth.auth`. This gives you everything you need to handle user sessions automatically.
+
+```python
+from auth.auth import account
+```
+
+Available methods:
+
+- `account.create_account(email, password)` — registers a new user
+- `account.login(email, password)` — authenticates and starts a session
+- `account.logout(request)` — ends the current session
+- `account.get_session(request)` — retrieves the active session
+
+Passwords are never stored in plain text. Radium encrypts and hashes them before persisting.
+
+---
+
+## Custom Error Pages
+
+To show a branded error page instead of the default one, create a file at `templates/&error.html`. Radium will render it automatically whenever an error occurs.
+
+---
+
+## Project Structure
+
+```
+myapp/
+├── app/
+│   ├── @home/
+│   │   └── page.py
+│   └── @dashboard/
+│       └── page.py
+├── templates/
+│   ├── _layout.html
+│   ├── home.html
+│   └── &error.html
+├── auth/
+│   └── auth.py
+└── run.py
+```
